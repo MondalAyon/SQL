@@ -1,0 +1,130 @@
+/*  https://leetcode.com/problems/students-report-by-geography/description/
+
+
+Table: Student
+
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| name        | varchar |
+| continent   | varchar |
++-------------+---------+
+This table may contain duplicate rows.
+Each row of this table indicates the name of a student and the continent they came from.
+ 
+
+A school has students from Asia, Europe, and America.
+
+Write a solution to pivot the continent column in the Student table so that each name is sorted alphabetically and displayed underneath its corresponding continent. The output headers should be America, Asia, and Europe, respectively.
+
+The test cases are generated so that the student number from America is not less than either Asia or Europe.
+
+The result format is in the following example.
+
+ 
+
+Example 1:
+
+Input: 
+Student table:
++--------+-----------+
+| name   | continent |
++--------+-----------+
+| Jane   | America   |
+| Pascal | Europe    |
+| Xi     | Asia      |
+| Jack   | America   |
++--------+-----------+
+Output: 
++---------+------+--------+
+| America | Asia | Europe |
++---------+------+--------+
+| Jack    | Xi   | Pascal |
+| Jane    | null | null   |
++---------+------+--------+
+*/
+
+# Write your MySQL query statement below
+
+
+with America as (select 
+ROW_NUMBER() OVER() AS id, 
+CASE WHEN continent ='America' then name end as America
+from Student
+where CASE WHEN continent ='America' then name end is not null
+order by America
+),
+
+Asia as (
+select 
+ROW_NUMBER() OVER() AS id, 
+CASE WHEN continent ='Asia' then name end as Asia
+from Student 
+where CASE WHEN continent ='Asia' then name end is not null
+order by Asia
+),
+
+ Europe as (
+select 
+ROW_NUMBER() OVER() AS id,
+CASE WHEN continent ='Europe' then name end as Europe
+from Student 
+where CASE WHEN continent ='Europe' then name end is not null
+order by Europe
+)
+
+select 
+    America, 
+    Asia,
+    Europe
+from America a left join Asia s on 
+    a.id = s.id 
+left join Europe e on 
+    a.id = e.id 
+
+/*
+
+with 
+Col1 
+as (select row_number() over (partition by null order by null) rnk, America 
+  from (
+    select case when continent = 'America' then name else null end as America
+    from Student   
+    order by America  
+  ) c1
+  where America is not null
+  order by America  
+)
+,Col2 
+as 
+(select row_number() over (partition by null order by null) rnk, Asia 
+  from (
+    select case when continent = 'Asia' then name else null end as Asia
+    from Student  
+    order by Asia   
+  ) c2
+  where Asia is not null
+  order by Asia 
+)
+,Col3 
+as 
+(select row_number() over (partition by null order by null) rnk, Europe 
+  from (
+    select case when continent = 'Europe' then name else null end as Europe
+    from Student   
+    order by Europe  
+  ) c3
+  where Europe is not null
+  order by Europe 
+)
+
+select  America, Asia, Europe
+from (
+  select Col1.rnk, Col1.America, Col2.Asia
+  from Col1 LEFT JOIN Col2 
+  on Col1.rnk = Col2.rnk
+  order by Col1.America ASC
+) x LEFT JOIN Col3
+on x.rnk = Col3.rnk
+#order by America ASC, Asia DESC
+*/
